@@ -1,0 +1,15 @@
+*.o
+*.a
+*.[568vq]
+[568vq].out
+*.so
+_obj
+_test
+_testmain.go
+*.exe
+_cgo*
+*.out
+*.out
+*.swp
+*.log
+*.txt
