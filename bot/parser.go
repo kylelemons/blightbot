@@ -5,28 +5,49 @@ import (
 	"strings"
 )
 
+// A Message represents a parsed line from the IRC server.
 type Message struct {
 	Prefix  string
 	Command string
 	Args    []string
 }
 
-func NewMessage(pfx, cmd string, args []string) *Message {
-	m := new(Message)
-	m.Prefix = pfx
-	m.Command = cmd
-	m.Args = args
-	return m
+// NewMessage creates a message with the given prefix, command, and arguments.
+func NewMessage(pfx, cmd string, args ...string) *Message {
+	return &Message{
+		Prefix: pfx,
+		Command: cmd,
+		Args: args,
+	}
 }
 
 // Copy copies the message.  This is a deep copy.
-func (m *Message) Copy() *Message {
-	n := new(Message)
-	*n = *m
-	n.Args = append(make([]string, 0, len(m.Args)), m.Args...)
-	return n
+func (m Message) Copy() *Message {
+	return &Message{
+		Prefix: m.Prefix,
+		Command: m.Command,
+		Args: append(make([]string, 0, len(m.Args)), m.Args...),
+	}
 }
 
+// ID returns the Identity of the sender of the message.
+func (m *Message) ID() *Identity {
+	id := &Identity{
+		Host: m.Prefix,
+	}
+
+	uh := strings.SplitN(id.Host, "@", 2)
+	if len(uh) != 2 { return id }
+	id.User, id.Host = uh[0], uh[1]
+
+	nu := strings.SplitN(id.User, "!", 2)
+	if len(nu) != 2 { return id }
+	id.Nick, id.User = nu[0], nu[1]
+
+	return id
+}
+
+// ParseMessage returns the Message parsed from the given line.
 func ParseMessage(line string) *Message {
 	line = strings.TrimSpace(line)
 	if len(line) <= 0 {
@@ -51,29 +72,29 @@ func ParseMessage(line string) *Message {
 	return m
 }
 
-// Bytes builds the message and returns its bytes.  If longarg is
-// true or there is a space in the last argument, it is prefixed
-// with a colon.
-func (m Message) Bytes(longarg bool) []byte {
-	buf := bytes.NewBuffer(make([]byte, 0, 512))
+// Bytes composes the message into a set of bytes for writing.
+func (m *Message) Bytes() []byte {
+	b := bytes.NewBuffer(make([]byte, 0, 128))
+	// Write the message
 	if len(m.Prefix) > 0 {
-		buf.WriteByte(':')
-		buf.WriteString(m.Prefix)
-		buf.WriteByte(' ')
+		b.WriteByte(':')
+		b.WriteString(m.Prefix)
+		b.WriteByte(' ')
 	}
-	buf.WriteString(m.Command)
+	b.WriteString(m.Command)
 	for i, arg := range m.Args {
-		buf.WriteByte(' ')
-		if i == len(m.Args)-1 {
-			if longarg || strings.IndexAny(arg, " :") >= 0 {
-				buf.WriteByte(':')
-			}
+		b.WriteByte(' ')
+		if i == len(m.Args)-1 && strings.IndexAny(arg, " :") >= 0 {
+			// "escape" the long argument
+			b.WriteByte(':')
 		}
-		buf.WriteString(m.Args[i])
+		b.WriteString(arg)
 	}
-	return buf.Bytes()
+	b.WriteByte('\n')
+	return b.Bytes()
 }
 
-func (m Message) String() string {
-	return string(m.Bytes(false))
+// String composes the message into a string.
+func (m *Message) String() string {
+	return string(m.Bytes())
 }

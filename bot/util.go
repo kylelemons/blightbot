@@ -4,32 +4,32 @@ import (
 	"strings"
 )
 
-func isletter(rune int) bool {
-	return (rune >= 'a' && rune <= 'z') || (rune >= 'A' && rune <= 'Z')
+func isletter(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
 }
-func isdigit(rune int) bool {
-	return (rune >= '0' && rune <= '9')
+func isdigit(r rune) bool {
+	return (r >= '0' && r <= '9')
 }
-func isspecial(rune int) bool {
-	return (rune >= '[' && rune <= '`') || (rune >= '{' && rune <= '}')
+func isspecial(r rune) bool {
+	return (r >= '[' && r <= '`') || (r >= '{' && r <= '}')
 }
 
 // TODO(kevlar): Tests
 func ToLower(str string) string {
-	return strings.Map(func(rune int) int {
-		if rune >= 'A' && rune <= '^' {
-			return rune - 'A' + 'a'
+	return strings.Map(func(r rune) rune {
+		if r >= 'A' && r <= '^' {
+			return r - 'A' + 'a'
 		}
-		return rune
+		return r
 	}, str)
 }
 
 func ToUpper(str string) string {
-	return strings.Map(func(rune int) int {
-		if rune >= 'a' && rune <= '~' {
-			return rune - 'a' + 'A'
+	return strings.Map(func(r rune) rune {
+		if r >= 'a' && r <= '~' {
+			return r - 'a' + 'A'
 		}
-		return rune
+		return r
 	}, str)
 }
 
@@ -38,11 +38,11 @@ func ValidServerName(str string) bool {
 		return false
 	}
 	dot := 0
-	for _, rune := range str {
-		if !isletter(rune) && !isdigit(rune) && !isspecial(rune) && rune != '-' && rune != '.' {
+	for _, r := range str {
+		if !isletter(r) && !isdigit(r) && !isspecial(r) && r != '-' && r != '.' {
 			return false
 		}
-		if rune == '.' {
+		if r == '.' {
 			dot++
 		}
 	}
@@ -53,11 +53,11 @@ func ValidServerPrefix(pfx string) bool {
 	if len(pfx) != 3 {
 		return false
 	}
-	if !isdigit(int(pfx[0])) {
+	if !isdigit(rune(pfx[0])) {
 		return false
 	}
-	for _, rune := range pfx {
-		if !isletter(rune) && !isdigit(rune) {
+	for _, r := range pfx {
+		if !isletter(r) && !isdigit(r) {
 			return false
 		}
 	}
@@ -68,11 +68,11 @@ func ValidNick(str string) bool {
 	if len(str) == 0 {
 		return false
 	}
-	if isdigit(int(str[0])) || str[0] == '-' {
+	if isdigit(rune(str[0])) || str[0] == '-' {
 		return false
 	}
-	for _, rune := range str {
-		if !isletter(rune) && !isdigit(rune) && !isspecial(rune) && rune != '-' {
+	for _, r := range str {
+		if !isletter(r) && !isdigit(r) && !isspecial(r) && r != '-' {
 			return false
 		}
 	}
@@ -86,8 +86,8 @@ func ValidChannel(str string) bool {
 	if str[0] != '#' {
 		return false
 	}
-	for _, rune := range str {
-		switch rune {
+	for _, r := range str {
+		switch r {
 		case 0x00:
 			return false
 		case 0x07:
@@ -108,9 +108,9 @@ func ValidChannel(str string) bool {
 }
 
 func StripUnsafe(str string) string {
-	return strings.Map(func(rune int) int {
-		if rune >= '!' && rune <= '~' && rune != ':' {
-			return rune
+	return strings.Map(func(r rune) rune {
+		if r >= '!' && r <= '~' && r != ':' {
+			return r
 		}
 		return -1
 	}, str)

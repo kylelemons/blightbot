@@ -14,24 +14,24 @@ var messageTests = []struct {
 		Prefix: "server.kevlar.net",
 		Cmd:    "NOTICE",
 		Args:   []string{"user", "*** This is a test"},
-		Expect: ":server.kevlar.net NOTICE user :*** This is a test",
+		Expect: ":server.kevlar.net NOTICE user :*** This is a test\n",
 	},
 	{
 		Prefix: "A",
 		Cmd:  "B",
 		Args: []string{"C"},
-		Expect: ":A B C",
+		Expect: ":A B C\n",
 	},
 	{
 		Cmd:  "B",
 		Args: []string{"C"},
-		Expect: "B C",
+		Expect: "B C\n",
 	},
 	{
 		Prefix: "A",
 		Cmd:  "B",
 		Args: []string{"C", "D"},
-		Expect: ":A B C D",
+		Expect: ":A B C D\n",
 	},
 }
 
@@ -80,14 +80,14 @@ func BenchmarkParseMessage(b *testing.B) {
 
 var buildBench = ParseMessage(parseBench)
 
-func BenchmarkBuildMessage(b *testing.B) {
+func BenchmarkMessageString(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		buildBench.String()
 	}
 }
 
-func BenchmarkBuildMessageBytes(b *testing.B) {
+func BenchmarkMessageBytes(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		buildBench.Bytes(false)
+		buildBench.Bytes()
 	}
 }
