@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"blightbot/bot"
+	"github.com/kylelemons/blightbot/bot"
 )
 
 type Response struct {

@@ -1,7 +1,7 @@
 package commander
 
 import (
-	"blightbot/bot"
+	"github.com/kylelemons/blightbot/bot"
 	"sort"
 	"strings"
 )
@@ -93,9 +93,9 @@ func Run(b *bot.Bot, startchar byte, cmds []*Command) {
 	cmdmap := make(map[string][]*Command, len(cmds))
 	cmdlen := 0
 	for _, cmd := range cmds {
-		name := strings.ToUpper(cmd.name)
-		cmdmap[name] = append(cmdmap[name], cmd)
-		if l := len(name); l > cmdlen {
+		cmd.name = strings.ToUpper(cmd.name)
+		cmdmap[cmd.name] = append(cmdmap[cmd.name], cmd)
+		if l := len(cmd.name); l > cmdlen {
 			cmdlen = l
 		}
 	}
@@ -206,18 +206,25 @@ func genhelp(cmds []*Command, cmdwidth int) func(cmd string, r *Response, args [
 		r.Private()
 		r.Printf("Help:")
 
-		name, lines := "", 0
+		name, sent := "", 0
 		if len(args) > 0 {
 			name = strings.ToUpper(args[0])
 		}
 		for _, cmd := range cmds {
-			if name != "" && cmd.name != name {
+			lines := strings.Split(cmd.help, "\n")
+			if name != "" {
+				if cmd.name == name {
+					for _, line := range lines {
+						r.Printf(line)
+						sent++
+					}
+				}
 				continue
 			}
-			r.Printf("  %*s - %s", cmdwidth, Bold(cmd.name), cmd.help)
-			lines++
+			r.Printf("  %*s - %s", cmdwidth, Bold(cmd.name), lines[0])
+			sent++
 		}
-		if lines == 0 {
+		if sent == 0 {
 			r.Printf("  No matching commands found")
 		}
 	}

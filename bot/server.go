@@ -65,7 +65,7 @@ func (s *Server) manage() {
 	defer s.conn.Close()
 	defer s.trigger(ON_DISCONNECT, nil)
 	fmt.Fprintf(s.conn, "NICK %s\nUSER %s . . :%s\n",
-		s.id.Nick, s.id.User, "blightbot-v0.0.0")
+		s.id.Nick, s.id.User, "github.com/kylelemons/github.com/kylelemons/blightbot-v0.0.0")
 	for {
 		select {
 		case inc, ok := <-s.inc:

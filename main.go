@@ -5,13 +5,20 @@ import (
 	"log"
 	"fmt"
 	"math/rand"
+	"time"
 
-	"blightbot/bot"
-	"blightbot/commander"
+	"github.com/kylelemons/blightbot/bot"
+	"github.com/kylelemons/blightbot/commander"
+	"github.com/kylelemons/blightbot/gonuts"
 )
 
+func randname() string {
+	rand.Seed(time.Now().UnixNano())
+	return fmt.Sprintf("BlightBot%04d", rand.Intn(10000))
+}
+
 var (
-	nick    = flag.String("nick", fmt.Sprintf("BlightBot%04d", rand.Intn(1000)), "Nick to use when connecting")
+	nick    = flag.String("nick", randname(), "Nick to use when connecting")
 	user    = flag.String("user", "blight", "Username to use when connecting")
 	server  = flag.String("server", "irc.freenode.net:6667", "Server to which the bot should connect")
 	channel = flag.String("channel", "#ircd-blight", "Channel to join")
@@ -32,5 +39,7 @@ func main() {
 		log.Fatalf("connect: %s", err)
 	}
 	log.Printf("Bot is running...")
-	commander.Run(b, '!', nil)
+	commander.Run(b, '!', []*commander.Command{
+		gonuts.Issue,
+	})
 }
