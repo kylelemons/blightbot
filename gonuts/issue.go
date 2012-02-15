@@ -198,8 +198,6 @@ var Issue = commander.Cmd("issue", func(cmd string, resp *commander.Response, ar
 		return
 	}
 
-	resp.Printf("Woot")
-
 	sort.Sort(ByLatest(feed.Entry))
 	for entryIdx, e := range feed.Entry {
 		if entryIdx >= 5 {
