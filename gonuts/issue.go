@@ -11,12 +11,9 @@ package gonuts
 import (
 	"bytes"
 	"encoding/xml"
-	"fmt"
-	//"html"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -25,33 +22,6 @@ import (
 
 	"github.com/kylelemons/blightbot/commander"
 )
-
-func usage() {
-	fmt.Fprintf(os.Stderr, `usage: issue [-p project] query
-
-If query is a single number, prints the full history for the issue.
-Otherwise, prints a table of matching results.
-The special query 'go1' is shorthand for 'Priority=Go1'.
-
-Query parameters:
-	updated-min=YYYY-MM-DDThh:mm:ss
-	updated-max=YYYY-MM-DDThh:mm:ss
-	published-min=YYYY-MM-DDThh:mm:ss
-	published-max=YYYY-MM-DDThh:mm:ss
-	author=user
-	can=all/open
-	id=NNNNN
-	label=labelname
-	max-results=NNN
-	owner=user
-	q=fulltext
-	status=status
-	start-index=NNN
-	status=New/Accepted/Started/WaitingForReply/Thinking/HelpWanted/LongTerm
-	priority=Triage/Go1/Later/Someday
-`)
-	os.Exit(2)
-}
 
 type Feed struct {
 	Entry []Entry `xml:"entry"`
@@ -118,7 +88,7 @@ var funcs = template.FuncMap{
 	"link": findlink,
 }
 
-var templates = map[string]*template.Template{
+var issuetemplates = map[string]*template.Template{
 	"search": template.Must(template.New("search").Funcs(funcs).Parse("[issue {{.ID}}] {{.Title}}")),
 	"id": template.Must(template.New("id").Funcs(funcs).Parse("[issue {{.ID}}] {{.Label}} {{.Title}}\nDetail: {{.Links|link}} -- !issue detail {{.ID}}")),
 	"detail": template.Must(template.New("detail").Funcs(funcs).Parse(`[issue {{.ID}}] {{.Title}}
@@ -205,7 +175,7 @@ var Issue = commander.Cmd("issue", func(cmd string, resp *commander.Response, ar
 		}
 
 		b := new(bytes.Buffer)
-		if t, ok := templates[cmd]; ok {
+		if t, ok := issuetemplates[cmd]; ok {
 			if err := t.Execute(b, e); err != nil {
 				resp.Printf("Sorry, `issue` seems to be having, well, issues...")
 				log.Printf("template execute: %s", err)

@@ -35,7 +35,7 @@ var serverTests = []struct {
 		Desc: "err first",
 		Sequence: []interface{}{
 			Expect("NICK n"),
-			Expect("USER u . . :github.com/kylelemons/github.com/kylelemons/blightbot-v0.0.0"),
+			Expect("USER u . . :github.com/kylelemons/blightbot-v0.0.0"),
 			Send("ERROR :Some error"),
 			Expect("QUIT :read closed"),
 		},
@@ -44,7 +44,7 @@ var serverTests = []struct {
 		Desc: "eof",
 		Sequence: []interface{}{
 			Expect("NICK n"),
-			Expect("USER u . . :github.com/kylelemons/github.com/kylelemons/blightbot-v0.0.0"),
+			Expect("USER u . . :github.com/kylelemons/blightbot-v0.0.0"),
 			EOF{},
 			Expect("QUIT :read closed"),
 		},
@@ -58,7 +58,7 @@ var serverTests = []struct {
 		},
 		Sequence: []interface{}{
 			Expect("NICK n"),
-			Expect("USER u . . :github.com/kylelemons/github.com/kylelemons/blightbot-v0.0.0"),
+			Expect("USER u . . :github.com/kylelemons/blightbot-v0.0.0"),
 			Send(":serv 001 :Welcome"),
 			Expect("JOIN #chan"),
 			EOF{},
@@ -74,7 +74,7 @@ var serverTests = []struct {
 		},
 		Sequence: []interface{}{
 			Expect("NICK n"),
-			Expect("USER u . . :github.com/kylelemons/github.com/kylelemons/blightbot-v0.0.0"),
+			Expect("USER u . . :github.com/kylelemons/blightbot-v0.0.0"),
 			EOF{},
 			Expect("QUIT :read closed"),
 			Expect("DC"),
@@ -84,7 +84,7 @@ var serverTests = []struct {
 		Desc: "collide",
 		Sequence: []interface{}{
 			Expect("NICK n"),
-			Expect("USER u . . :github.com/kylelemons/github.com/kylelemons/blightbot-v0.0.0"),
+			Expect("USER u . . :github.com/kylelemons/blightbot-v0.0.0"),
 			Send(":serv 433 nk :Nickname already in use"),
 			Expect("NICK nk_"),
 			EOF{},
@@ -95,7 +95,7 @@ var serverTests = []struct {
 		Desc: "collide bad 443",
 		Sequence: []interface{}{
 			Expect("NICK n"),
-			Expect("USER u . . :github.com/kylelemons/github.com/kylelemons/blightbot-v0.0.0"),
+			Expect("USER u . . :github.com/kylelemons/blightbot-v0.0.0"),
 			Send(":serv 433 :Nickname already in use"),
 			Expect("NICK n_"),
 			EOF{},
@@ -118,7 +118,7 @@ var serverTests = []struct {
 		},
 		Sequence: []interface{}{
 			Expect("NICK n"),
-			Expect("USER u . . :github.com/kylelemons/github.com/kylelemons/blightbot-v0.0.0"),
+			Expect("USER u . . :github.com/kylelemons/blightbot-v0.0.0"),
 			Send(":serv 001 :Welcome"),
 			Expect("JOIN #test"),
 			Send(":n!u@h JOIN :#test"),

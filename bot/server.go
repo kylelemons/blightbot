@@ -18,6 +18,7 @@ type Server struct {
 	bot  *Bot
 	id   *Identity
 	name string
+	pass string
 	conn io.ReadWriteCloser
 
 	lock     sync.RWMutex
@@ -34,10 +35,11 @@ func (s *Server) Me(id *Identity) bool {
 	return id.Nick == s.id.Nick
 }
 
-func (b *Bot) newServer(name string, rwc io.ReadWriteCloser) {
+func (b *Bot) newServer(name, pass string, rwc io.ReadWriteCloser) {
 	s := &Server{
 		bot:      b,
 		name:     name,
+		pass:     pass,
 		id:       b.id,
 		conn:     rwc,
 		inc:      make(chan *Message, 32),
@@ -57,15 +59,27 @@ func (b *Bot) Connect(server string) error {
 	if err != nil {
 		return err
 	}
-	b.newServer(server, conn)
+	b.newServer(server, "", conn)
+	return nil
+}
+
+func (b *Bot) ConnectPass(server, pass string) error {
+	conn, err := net.Dial("tcp", server)
+	if err != nil {
+		return err
+	}
+	b.newServer(server, pass, conn)
 	return nil
 }
 
 func (s *Server) manage() {
 	defer s.conn.Close()
 	defer s.trigger(ON_DISCONNECT, nil)
+	if s.pass != "" {
+		fmt.Fprintf(s.conn, "PASS %s\n", s.pass)
+	}
 	fmt.Fprintf(s.conn, "NICK %s\nUSER %s . . :%s\n",
-		s.id.Nick, s.id.User, "github.com/kylelemons/github.com/kylelemons/blightbot-v0.0.0")
+		s.id.Nick, s.id.User, "github.com/kylelemons/blightbot-v0.0.0")
 	for {
 		select {
 		case inc, ok := <-s.inc:

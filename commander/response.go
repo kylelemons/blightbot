@@ -21,11 +21,19 @@ type Response struct {
 }
 
 func (r *Response) Public() {
-	r.target, r.msgtyp = r.public, bot.CMD_PRIVMSG
+	r.target = r.public
+	r.msgtyp = bot.CMD_NOTICE
+	if len(r.target) > 0 && r.target[0] == '#' {
+		r.msgtyp = bot.CMD_PRIVMSG
+	}
 }
 
 func (r *Response) Private() {
-	r.target, r.msgtyp = r.private, bot.CMD_NOTICE
+	r.target = r.private
+	r.msgtyp = bot.CMD_NOTICE
+	if len(r.target) > 0 && r.target[0] == '#' {
+		r.msgtyp = bot.CMD_PRIVMSG
+	}
 }
 
 func (r *Response) WriteString(s string) {

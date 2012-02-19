@@ -1,6 +1,7 @@
 package commander
 
 import (
+	"log"
 	"github.com/kylelemons/blightbot/bot"
 	"sort"
 	"strings"
@@ -100,6 +101,8 @@ func Run(b *bot.Bot, startchar byte, cmds []*Command) {
 		}
 	}
 
+	log.Printf("Command length: %d", cmdlen)
+
 	// Add ping
 	if _, ok := cmdmap["PING"]; !ok {
 		c := &Command{
@@ -142,7 +145,9 @@ func Run(b *bot.Bot, startchar byte, cmds []*Command) {
 		case startchar:
 			text = text[1:]
 		default:
-			continue
+			if e.name == bot.ON_CHANMSG {
+				continue
+			}
 		}
 
 		// Parse the command into arguments
@@ -221,7 +226,7 @@ func genhelp(cmds []*Command, cmdwidth int) func(cmd string, r *Response, args [
 				}
 				continue
 			}
-			r.Printf("  %*s - %s", cmdwidth, Bold(cmd.name), lines[0])
+			r.Printf("  %*s - %s", -(cmdwidth+2), Bold(cmd.name), lines[0])
 			sent++
 		}
 		if sent == 0 {
