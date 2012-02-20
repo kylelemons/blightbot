@@ -85,7 +85,7 @@ func (g *Game) start() {
 						return
 					}
 				}
-			}
+			}()
 		}()
 
 		botnick := g.server.ID().Nick
