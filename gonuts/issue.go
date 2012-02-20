@@ -99,7 +99,7 @@ Status:    {{range .Label}}{{.}} {{end}}{{.Status}} ({{.Stars}} stars)
 {{.Content|wrap}}`)),
 }
 
-var Issue = commander.Cmd("issue", func(cmd string, resp *commander.Response, args []string) {
+var Issue = commander.Cmd("issue", func(src *commander.Source, resp *commander.Response, cmd string, args []string) {
 	if len(args) < 1 {
 		args = append(args, "")
 	}

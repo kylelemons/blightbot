@@ -58,7 +58,7 @@ Detail: {{.Links|link}}{{end}}`)),
 Authors{{range $auth, $cnt := .Authors}} | {{$auth}} ({{$cnt}} CLs){{end}}{{end}}`)),
 }
 
-var CL = commander.Cmd("cl", func(cmd string, resp *commander.Response, args []string) {
+var CL = commander.Cmd("cl", func(src *commander.Source, resp *commander.Response, cmd string, args []string) {
 	// Reasonable default is private
 	resp.Private()
 

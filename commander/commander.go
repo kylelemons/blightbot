@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-type Hook func(cmd string, r *Response, args []string)
+type Hook func(s *Source, r *Response, cmd string, args []string)
 
-func (h Hook) call(cmd string, r *Response, args []string) {
+func (h Hook) call(s *Source, r *Response, cmd string, args []string) {
 	go func() {
 		defer r.done()
-		h(cmd, r, args)
+		h(s, r, cmd, args)
 	}()
 }
 
@@ -109,7 +109,7 @@ func Run(b *bot.Bot, startchar byte, cmds []*Command) {
 			name: "PING",
 			help: "Built-in CTCP PING handler",
 			priv: true,
-			hook: func(cmd string, r *Response, args []string) {
+			hook: func(s *Source, r *Response, cmd string, args []string) {
 				r.Private()
 				r.Printf("PING %s", strings.Join(args, " "))
 			},
@@ -182,7 +182,11 @@ func Run(b *bot.Bot, startchar byte, cmds []*Command) {
 			}
 		}()
 		resp := &Response{
-			out: replies,
+			out:    replies,
+		}
+		src := &Source {
+			server: e.srv,
+			message: e.msg,
 		}
 
 		// Set the public/private responses
@@ -201,13 +205,13 @@ func Run(b *bot.Bot, startchar byte, cmds []*Command) {
 
 		// Call the hook
 		for _, cmd := range cmd {
-			go cmd.hook.call(command, resp, args)
+			cmd.hook.call(src, resp, command, args)
 		}
 	}
 }
 
-func genhelp(cmds []*Command, cmdwidth int) func(cmd string, r *Response, args []string) {
-	return func(cmd string, r *Response, args []string) {
+func genhelp(cmds []*Command, cmdwidth int) Hook {
+	return func(s *Source, r *Response, cmd string, args []string) {
 		r.Private()
 		r.Printf("Help:")
 
