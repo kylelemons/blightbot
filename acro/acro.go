@@ -72,6 +72,20 @@ func (g *Game) start() {
 	go func() {
 		defer func() {
 			g.started = false
+
+			// Just to be safe, grab any lingering commands for 60s
+			go func() {
+				reallydone := time.After(60*time.Second)
+				for {
+					select {
+					case cmd := <-g.commands:
+						log.Printf("Lingering acro command: %#v", cmd)
+						cmd.done()
+					case <-reallydone:
+						return
+					}
+				}
+			}
 		}()
 
 		botnick := g.server.ID().Nick
