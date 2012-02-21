@@ -257,6 +257,11 @@ func godoc(src *commander.Source, resp *commander.Response, cmd string, args []s
 				search = strings.Title(search)
 			}
 			pageIndex := index.Pages[site][page]
+			if url, ok := pageIndex.SectionURLs[search]; ok {
+				found++
+				resp.Printf("%s%s: %s - %s", prefix, page, search, url)
+				continue
+			}
 			for section, url := range pageIndex.SectionURLs {
 				if strings.Contains(section, search) {
 					found++
