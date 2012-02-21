@@ -15,18 +15,18 @@ type Message struct {
 // NewMessage creates a message with the given prefix, command, and arguments.
 func NewMessage(pfx, cmd string, args ...string) *Message {
 	return &Message{
-		Prefix: pfx,
+		Prefix:  pfx,
 		Command: cmd,
-		Args: args,
+		Args:    args,
 	}
 }
 
 // Copy copies the message.  This is a deep copy.
 func (m Message) Copy() *Message {
 	return &Message{
-		Prefix: m.Prefix,
+		Prefix:  m.Prefix,
 		Command: m.Command,
-		Args: append(make([]string, 0, len(m.Args)), m.Args...),
+		Args:    append(make([]string, 0, len(m.Args)), m.Args...),
 	}
 }
 
@@ -37,11 +37,15 @@ func (m *Message) ID() *Identity {
 	}
 
 	uh := strings.SplitN(id.Host, "@", 2)
-	if len(uh) != 2 { return id }
+	if len(uh) != 2 {
+		return id
+	}
 	id.User, id.Host = uh[0], uh[1]
 
 	nu := strings.SplitN(id.User, "!", 2)
-	if len(nu) != 2 { return id }
+	if len(nu) != 2 {
+		return id
+	}
 	id.Nick, id.User = nu[0], nu[1]
 
 	return id

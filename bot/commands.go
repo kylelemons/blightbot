@@ -36,11 +36,11 @@ const (
 	CMD_TB    = "TB"
 
 	// Callback-only
-	ON_CONNECT = "onconnect"
+	ON_CONNECT    = "onconnect"
 	ON_DISCONNECT = "ondisconnect"
-	ON_JOIN = "onjoin"
-	ON_PART = "onpart"
-	ON_CHANMSG = "onchanmsg"
-	ON_PRIVMSG = "onprivmsg"
-	ON_NOTICE = "onnotice"
+	ON_JOIN       = "onjoin"
+	ON_PART       = "onpart"
+	ON_CHANMSG    = "onchanmsg"
+	ON_PRIVMSG    = "onprivmsg"
+	ON_NOTICE     = "onnotice"
 )

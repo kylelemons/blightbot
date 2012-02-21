@@ -18,19 +18,19 @@ var messageTests = []struct {
 	},
 	{
 		Prefix: "A",
-		Cmd:  "B",
-		Args: []string{"C"},
+		Cmd:    "B",
+		Args:   []string{"C"},
 		Expect: ":A B C\n",
 	},
 	{
-		Cmd:  "B",
-		Args: []string{"C"},
+		Cmd:    "B",
+		Args:   []string{"C"},
 		Expect: "B C\n",
 	},
 	{
 		Prefix: "A",
-		Cmd:  "B",
-		Args: []string{"C", "D"},
+		Cmd:    "B",
+		Args:   []string{"C", "D"},
 		Expect: ":A B C D\n",
 	},
 }
@@ -68,7 +68,6 @@ func TestParseMesage(t *testing.T) {
 		}
 	}
 }
-
 
 var parseBench = ":irc.example.com NOTICE user :*** This is a test"
 

@@ -7,9 +7,9 @@ import (
 type Handler func(event string, serv *Server, msg *Message)
 
 type Bot struct {
-	lock     sync.RWMutex
-	id       *Identity
-	servers  []*Server
+	lock    sync.RWMutex
+	id      *Identity
+	servers []*Server
 
 	LogLevel int
 
@@ -34,8 +34,8 @@ func (id *Identity) String() string {
 
 func New(nick, user string) *Bot {
 	return &Bot{
-		LogLevel: 10,
-		id: &Identity{Nick: nick, User: user},
+		LogLevel:  10,
+		id:        &Identity{Nick: nick, User: user},
 		callbacks: map[string][]Handler{},
 	}
 }

@@ -61,6 +61,7 @@ type Update struct {
 
 // ByLatest sorts a []Entry by (reverse) update time
 type ByLatest []Entry
+
 func (e ByLatest) Len() int           { return len(e) }
 func (e ByLatest) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
 func (e ByLatest) Less(i, j int) bool { return !e[i].Updated.Before(e[j].Updated) }
@@ -83,14 +84,14 @@ var ShortQueries = map[string]string{
 }
 
 var funcs = template.FuncMap{
-	"wrap": wrap,
+	"wrap":  wrap,
 	"first": firstline,
-	"link": findlink,
+	"link":  findlink,
 }
 
 var issuetemplates = map[string]*template.Template{
 	"search": template.Must(template.New("search").Funcs(funcs).Parse("[issue {{.ID}}] {{.Title}}")),
-	"id": template.Must(template.New("id").Funcs(funcs).Parse("[issue {{.ID}}] {{.Label}} {{.Title}}\nDetail: {{.Links|link}} -- !issue detail {{.ID}}")),
+	"id":     template.Must(template.New("id").Funcs(funcs).Parse("[issue {{.ID}}] {{.Label}} {{.Title}}\nDetail: {{.Links|link}} -- !issue detail {{.ID}}")),
 	"detail": template.Must(template.New("detail").Funcs(funcs).Parse(`[issue {{.ID}}] {{.Title}}
 Status:    {{range .Label}}{{.}} {{end}}{{.Status}} ({{.Stars}} stars)
 {{if .Author}}Author:    {{.Author.Name}}

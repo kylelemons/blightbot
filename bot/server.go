@@ -27,9 +27,9 @@ type Server struct {
 	inc chan *Message
 }
 
-func (s *Server) Bot() *Bot    { return s.bot }
+func (s *Server) Bot() *Bot     { return s.bot }
 func (s *Server) ID() *Identity { return s.id }
-func (s *Server) Name() string { return s.name }
+func (s *Server) Name() string  { return s.name }
 
 func (s *Server) Me(id *Identity) bool {
 	return id.Nick == s.id.Nick

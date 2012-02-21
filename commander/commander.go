@@ -83,7 +83,7 @@ func Run(b *bot.Bot, startchar byte, cmds []*Command) {
 		bot.ON_CHANMSG,
 		bot.ON_PRIVMSG,
 		bot.ON_NOTICE,
-	}{
+	} {
 		b.OnEvent(evname, handle)
 	}
 
@@ -182,10 +182,10 @@ func Run(b *bot.Bot, startchar byte, cmds []*Command) {
 			}
 		}()
 		resp := &Response{
-			out:    replies,
+			out: replies,
 		}
-		src := &Source {
-			server: e.srv,
+		src := &Source{
+			server:  e.srv,
 			message: e.msg,
 		}
 
@@ -230,7 +230,7 @@ func genhelp(cmds []*Command, cmdwidth int) Hook {
 				}
 				continue
 			}
-			r.Printf("  %*s - %s", -(cmdwidth+2), Bold(cmd.name), lines[0])
+			r.Printf("  %*s - %s", -(cmdwidth + 2), Bold(cmd.name), lines[0])
 			sent++
 		}
 		if sent == 0 {
@@ -240,6 +240,7 @@ func genhelp(cmds []*Command, cmdwidth int) Hook {
 }
 
 type commandSorter []*Command
-func (c commandSorter) Len()          int  { return len(c) }
+
+func (c commandSorter) Len() int           { return len(c) }
 func (c commandSorter) Less(i, j int) bool { return c[i].name < c[j].name }
 func (c commandSorter) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }

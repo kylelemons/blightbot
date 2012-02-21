@@ -15,16 +15,16 @@ import (
 )
 
 var (
-	acrostart = flag.Duration("acro-start", 1*time.Minute, "Acro start delay")
+	acrostart  = flag.Duration("acro-start", 1*time.Minute, "Acro start delay")
 	acrosubmit = flag.Duration("acro-submit", 2*time.Minute, "Acro submission time")
-	acrovote = flag.Duration("acro-vote", 1*time.Minute, "Acro vote time")
-	acromin = flag.Int("acro-minlen", 4, "Acro minimum acronym")
-	acromax = flag.Int("acro-maxlen", 6, "Acro maximum acronym")
+	acrovote   = flag.Duration("acro-vote", 1*time.Minute, "Acro vote time")
+	acromin    = flag.Int("acro-minlen", 4, "Acro minimum acronym")
+	acromax    = flag.Int("acro-maxlen", 6, "Acro maximum acronym")
 )
 
 func gen() string {
 	const choose = "AAAAABBBBCCCDDDEEEEEEFFFGGGGHHHIIIIIJJJKKLLLLLMMMMMMNNNOOOOOPPQRRRSSSSSSTTTUUVVVWXYYZ"
-	letters := make([]byte, *acromin + rand.Intn(*acromax-*acromin+1))
+	letters := make([]byte, *acromin+rand.Intn(*acromax-*acromin+1))
 	for i := range letters {
 		letters[i] = choose[rand.Intn(len(choose))]
 	}
@@ -75,7 +75,7 @@ func (g *Game) start() {
 
 			// Just to be safe, grab any lingering commands for 60s
 			go func() {
-				reallydone := time.After(60*time.Second)
+				reallydone := time.After(60 * time.Second)
 				for {
 					select {
 					case cmd := <-g.commands:
@@ -95,7 +95,7 @@ func (g *Game) start() {
 
 		joinstop := time.After(*acrostart)
 		players := map[string]string{}
-		joins:
+	joins:
 		for {
 			select {
 			case <-joinstop:
@@ -127,7 +127,7 @@ func (g *Game) start() {
 			botnick, g.channel, *acrosubmit)
 
 		submitstop := time.After(*acrosubmit)
-		submits:
+	submits:
 		for {
 			select {
 			case <-submitstop:
@@ -178,7 +178,7 @@ func (g *Game) start() {
 
 		voted := map[string]bool{}
 		votestop := time.After(*acrovote)
-		votes:
+	votes:
 		for {
 			select {
 			case <-votestop:
@@ -326,7 +326,7 @@ var Acro = commander.Cmd("acro", func(s *commander.Source, r *commander.Response
 
 		v := new(vote)
 		v.nick = s.ID().Nick
-		v.idx = idx-1
+		v.idx = idx - 1
 		v.ret = make(chan string)
 		game.commands <- v
 		r.Private()
@@ -354,7 +354,6 @@ var Acro = commander.Cmd("acro", func(s *commander.Source, r *commander.Response
 		}
 	}
 
-
 }).Args(1, -1).Help(`Play Acro!
 Usage:
 	ACRO [#channel] START
@@ -371,7 +370,7 @@ Usage:
 `)
 
 type gc struct {
-	ret  chan string
+	ret chan string
 }
 
 func (g *gc) done() {
@@ -404,6 +403,8 @@ type votesort struct {
 	names []string
 }
 
-func (vs votesort) Len() int { return len(vs.votes) }
+func (vs votesort) Len() int           { return len(vs.votes) }
 func (vs votesort) Less(i, j int) bool { return vs.votes[j] < vs.votes[i] }
-func (vs votesort) Swap(i, j int)      { vs.votes[i], vs.votes[j], vs.names[i], vs.names[j] = vs.votes[j], vs.votes[i], vs.names[j], vs.names[i] }
+func (vs votesort) Swap(i, j int) {
+	vs.votes[i], vs.votes[j], vs.names[i], vs.names[j] = vs.votes[j], vs.votes[i], vs.names[j], vs.names[i]
+}

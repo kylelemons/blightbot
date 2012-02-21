@@ -16,16 +16,16 @@ const MaxPublicResults = 5
 
 var DocSites = map[string]string{
 	"release": "golang.org",
-	"weekly": "weekly.golang.org",
-	"tip": "tip.golang.org",
+	"weekly":  "weekly.golang.org",
+	"tip":     "tip.golang.org",
 }
 
 var DocPages = map[string]string{
-	"pkg": "/pkg",
-	"ego": "/doc/effective_go.html",
-	"faq": "/doc/go_faq.html",
+	"pkg":  "/pkg",
+	"ego":  "/doc/effective_go.html",
+	"faq":  "/doc/go_faq.html",
 	"spec": "/doc/go_spec.html",
-	"go1": "/doc/go1.html",
+	"go1":  "/doc/go1.html",
 }
 
 type Index struct {
@@ -67,11 +67,11 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 				}
 				sectionname = strings.Replace(text(n), "\n", " ", -1)
 				/*
-				for _, child := range n.Child {
-					if child.Type == html.TextNode {
-						sectionname += " " + child.Data
+					for _, child := range n.Child {
+						if child.Type == html.TextNode {
+							sectionname += " " + child.Data
+						}
 					}
-				}
 				*/
 				if sectionname == "" || sectionurl.Fragment == "" {
 					return
@@ -130,9 +130,9 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 }
 
 func generate() {
-	type data struct{
+	type data struct {
 		site, page string
-		parsed *PageIndex
+		parsed     *PageIndex
 	}
 
 	start := time.Now()
@@ -152,7 +152,7 @@ func generate() {
 				Host:   host,
 				Path:   path,
 			}
-			go func(){
+			go func() {
 				defer func() {
 					done <- d
 				}()
@@ -294,7 +294,7 @@ func init() {
 	go func() {
 		for {
 			generate()
-			time.Sleep(1*time.Hour)
+			time.Sleep(1 * time.Hour)
 		}
 	}()
 }

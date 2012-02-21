@@ -100,8 +100,8 @@ var CL = commander.Cmd("cl", func(src *commander.Source, resp *commander.Respons
 		return
 	}
 
-	var data struct{
-		Summary struct{
+	var data struct {
+		Summary struct {
 			Daily   int
 			Plus    string
 			Authors map[string]int
@@ -124,11 +124,16 @@ var CL = commander.Cmd("cl", func(src *commander.Source, resp *commander.Respons
 			// Split at weird chars (usually a .)
 			if idx := strings.IndexFunc(title, func(r rune) bool {
 				switch {
-				case r >= 'a' && r <= 'z': return false
-				case r >= 'A' && r <= 'Z': return false
-				case r >= '0' && r <= '9': return false
-				case r == '-' || r == '_': return false
-				case r == ':' || r == ' ': return false
+				case r >= 'a' && r <= 'z':
+					return false
+				case r >= 'A' && r <= 'Z':
+					return false
+				case r >= '0' && r <= '9':
+					return false
+				case r == '-' || r == '_':
+					return false
+				case r == ':' || r == ' ':
+					return false
 				}
 				return true
 			}); idx >= 0 {

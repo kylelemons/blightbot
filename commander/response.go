@@ -91,9 +91,9 @@ func DecodeCTCP(s string) string {
 }
 
 func EncodeCTCP(s string) string {
-	s = strings.Replace(s, "\x00", "\x100",    -1)
-	s = strings.Replace(s, "\r",   "\x10r",    -1)
-	s = strings.Replace(s, "\n",   "\x10n",    -1)
+	s = strings.Replace(s, "\x00", "\x100", -1)
+	s = strings.Replace(s, "\r", "\x10r", -1)
+	s = strings.Replace(s, "\n", "\x10n", -1)
 	s = strings.Replace(s, "\x10", "\x10\x10", -1)
 	return "\x01" + s + "\x01"
 }
