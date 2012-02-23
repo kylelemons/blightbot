@@ -150,6 +150,10 @@ func Run(b *bot.Bot, startchar byte, cmds []*Command) {
 			}
 		}
 
+		if text == "" {
+			continue
+		}
+
 		// Parse the command into arguments
 		command, args := "", strings.Fields(text)
 		command, args = args[0], args[1:]
