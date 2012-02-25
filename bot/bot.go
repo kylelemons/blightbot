@@ -2,6 +2,7 @@ package bot
 
 import (
 	"sync"
+	"time"
 )
 
 type Handler func(event string, serv *Server, msg *Message)
@@ -10,6 +11,9 @@ type Bot struct {
 	lock    sync.RWMutex
 	id      *Identity
 	servers []*Server
+
+	ping    time.Duration
+	timeout time.Duration
 
 	LogLevel int
 
@@ -36,8 +40,14 @@ func New(nick, user string) *Bot {
 	return &Bot{
 		LogLevel:  10,
 		id:        &Identity{Nick: nick, User: user},
+		ping:      30 * time.Second,
+		timeout:   1 * time.Second,
 		callbacks: map[string][]Handler{},
 	}
+}
+
+func (b *Bot) SetPing(ping, timeout time.Duration) {
+	b.ping, b.timeout = ping, timeout
 }
 
 func (b *Bot) OnConnect(h Handler) {

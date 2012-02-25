@@ -59,7 +59,7 @@ var serverTests = []struct {
 		Sequence: []interface{}{
 			Expect("NICK n"),
 			Expect("USER u . . :github.com/kylelemons/blightbot-v0.0.0"),
-			Send(":serv 001 :Welcome"),
+			Send(":serv 001 n :Welcome"),
 			Expect("JOIN #chan"),
 			EOF{},
 			Expect("QUIT :read closed"),
@@ -119,7 +119,7 @@ var serverTests = []struct {
 		Sequence: []interface{}{
 			Expect("NICK n"),
 			Expect("USER u . . :github.com/kylelemons/blightbot-v0.0.0"),
-			Send(":serv 001 :Welcome"),
+			Send(":serv 001 n :Welcome"),
 			Expect("JOIN #test"),
 			Send(":n!u@h JOIN :#test"),
 			Expect("PRIVMSG #test :Hello!"),
@@ -133,7 +133,9 @@ var serverTests = []struct {
 }
 
 func TestServer(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	//log.SetOutput(ioutil.Discard)
+	_ = log.SetOutput
+	_ = ioutil.Discard
 
 	for _, test := range serverTests {
 		desc := test.Desc
@@ -142,7 +144,7 @@ func TestServer(t *testing.T) {
 		go func() {
 			bot := New("n", "u")
 			conn, local := FakeConn()
-			bot.newServer("s:p", conn)
+			bot.newServer("s:p", "", conn)
 
 			fake := bufio.NewReader(local)
 
@@ -156,9 +158,11 @@ func TestServer(t *testing.T) {
 				case EOF:
 					local.Close()
 				case Send:
+					t.Logf("%s << %q", desc, act)
 					io.WriteString(local, string(act)+"\n")
 					after = string(act)
 				case Expect:
+					t.Logf("%s << %q (expecting)", desc, act)
 					line, err := fake.ReadString('\n')
 					if err != nil {
 						t.Errorf("%s: unexpected error: %s", desc, err)

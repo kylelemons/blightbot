@@ -8,6 +8,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -20,6 +21,7 @@ type Server struct {
 	name string
 	pass string
 	conn io.ReadWriteCloser
+	pong chan bool
 
 	lock     sync.RWMutex
 	channels map[string]*Channel
@@ -38,9 +40,10 @@ func (s *Server) Me(id *Identity) bool {
 func (b *Bot) newServer(name, pass string, rwc io.ReadWriteCloser) {
 	s := &Server{
 		bot:      b,
+		id:       b.id,
 		name:     name,
 		pass:     pass,
-		id:       b.id,
+		pong:     make(chan bool),
 		conn:     rwc,
 		inc:      make(chan *Message, 32),
 		channels: map[string]*Channel{},
@@ -52,13 +55,23 @@ func (b *Bot) newServer(name, pass string, rwc io.ReadWriteCloser) {
 
 	go s.manage()
 	go s.reader()
+	go s.pingloop()
 }
 
 func (b *Bot) Connect(server string) error {
-	conn, err := net.Dial("tcp", server)
+	addr, err := net.ResolveTCPAddr("tcp", server)
 	if err != nil {
 		return err
 	}
+
+	conn, err := net.DialTCP("tcp", nil, addr)
+	if err != nil {
+		return err
+	}
+
+	// Enable TCP keepalives
+	conn.SetKeepAlive(true)
+
 	b.newServer(server, "", conn)
 	return nil
 }
@@ -70,6 +83,30 @@ func (b *Bot) ConnectPass(server, pass string) error {
 	}
 	b.newServer(server, pass, conn)
 	return nil
+}
+
+func (s *Server) pingloop() {
+	defer func() {
+		s.conn.Close()
+	}()
+
+	ping, timeout := s.bot.ping, s.bot.timeout
+
+	message := []byte("PING :blight-bot\n")
+	for {
+		time.Sleep(ping)
+		if _, err := s.conn.Write(message); err != nil {
+			log.Printf("ping: %s")
+			return
+		}
+		select {
+		case <-s.pong:
+		case <-time.After(timeout):
+			io.WriteString(s.conn, "QUIT :ping time exceeded\n")
+			time.Sleep(1 * time.Second)
+			return
+		}
+	}
 }
 
 func (s *Server) manage() {
@@ -98,7 +135,7 @@ func (s *Server) manage() {
 				}
 			case ERR_NICKNAMEINUSE:
 				nick := s.id.Nick
-				if len(inc.Args) > 0 {
+				if len(inc.Args) > 1 {
 					nick = inc.Args[0]
 				}
 				nick += "_"
@@ -131,6 +168,8 @@ func (s *Server) manage() {
 				s.trigger(ON_PART, inc)
 			case CMD_PING:
 				s.WriteMessage(NewMessage("", "PONG", inc.Args...))
+			case CMD_PONG:
+				s.pong <- true
 			case CMD_PRIVMSG:
 				if len(inc.Args) < 2 {
 					break
