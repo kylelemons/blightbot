@@ -13,6 +13,7 @@ import (
 )
 
 const MaxPublicResults = 5
+const RefreshDocEvery = 6 * time.Hour
 
 var DocSites = map[string]string{
 	"release": "golang.org",
@@ -37,7 +38,9 @@ type PageIndex struct {
 }
 
 func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
-	p.SectionURLs = make(map[string]string, 100)
+	if p.SectionURLs == nil {
+		p.SectionURLs = make(map[string]string, 100)
+	}
 
 	var text func(*html.Node) string
 	text = func(n *html.Node) string {
@@ -66,20 +69,17 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 					}
 				}
 				sectionname = strings.Replace(text(n), "\n", " ", -1)
-				/*
-					for _, child := range n.Child {
-						if child.Type == html.TextNode {
-							sectionname += " " + child.Data
-						}
-					}
-				*/
-				if sectionname == "" || sectionurl.Fragment == "" {
+				if sectionname == "" || sectionname == ".." || sectionurl.Fragment == "" {
 					return
 				}
 				sectionname = strings.TrimSpace(sectionname)
 				sectionname = strings.Title(sectionname)
-				log.Printf("[GoDoc] %s: found section %q (at %s)", &uri, sectionname, &sectionurl)
-				p.SectionURLs[sectionname] = sectionurl.String()
+				//log.Printf("[GoDoc] %s: found section %q (at %s)", &uri, sectionname, &sectionurl)
+				if _, exists := p.SectionURLs[sectionname]; !exists {
+					p.SectionURLs[sectionname] = sectionurl.String()
+				} else {
+					//log.Printf("[GoDoc] %s: cowardly refusing to overwrite %q (was %s)", &uri, sectionname, old)
+				}
 				return
 			} else if n.Data == "a" {
 				pkgpath := ""
@@ -111,12 +111,12 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 					return
 				}
 				// Package names are either the same as or the last entry of the path
-				if pkgname != pkgpath && !strings.HasSuffix(pkgpath, "/"+pkgname) {
+				if pkgname != pkgpath && !strings.HasSuffix("pkg/"+pkgname, pkgpath) {
 					return
 				}
 				pkgurl := uri
 				pkgurl.Path = path.Join(pkgurl.Path, pkgpath)
-				log.Printf("[GoDoc] %s: found pkg %q (at %s)", &uri, pkgname, &pkgurl)
+				//log.Printf("[GoDoc] %s: found pkg %q (at %s)", &uri, pkgname, &pkgurl)
 				p.SectionURLs[pkgpath] = pkgurl.String()
 				return
 			}
@@ -173,6 +173,49 @@ func generate() {
 				if err := pageIndex.ParseFrom(uri, node); err != nil {
 					log.Printf("[GoDoc] %s:%s (%s) failed to index: %s", d.site, d.page, uri, err)
 					return
+				}
+
+				if d.page == "pkg" {
+					uris := make([]string, 0, len(pageIndex.SectionURLs))
+					pkgs := make([]string, 0, len(pageIndex.SectionURLs))
+
+					for pkg, uri := range pageIndex.SectionURLs {
+						if !strings.HasSuffix(uri, "/pkg/"+pkg) {
+							continue
+						}
+						log.Printf("[GoDoc] Perusing package %q at %q", pkg, uri)
+						uris = append(uris, uri)
+						pkgs = append(pkgs, pkg)
+					}
+
+					for i, uri := range uris {
+						pkg := pkgs[i]
+						log.Printf("[GoDoc] Pulling package %q at %q", pkg, uri)
+
+						u, err := url.Parse(uri)
+						if err != nil {
+							log.Printf("[GoDoc] %s:%s:%s failed to parse URL %q: %s", d.site, d.page, pkg, uri, err)
+							continue
+						}
+
+						resp, err := http.Get(uri)
+						if err != nil {
+							log.Printf("[GoDoc] bad package URL %q", uri)
+							continue
+						}
+						defer resp.Body.Close()
+
+						node, err := html.Parse(resp.Body)
+						if err != nil {
+							log.Printf("[GoDoc] %s:%s:%s (%s) failed to parse package: %s", d.site, d.page, pkg, uri, err)
+							continue
+						}
+
+						if err := pageIndex.ParseFrom(*u, node); err != nil {
+							log.Printf("[GoDoc] %s:%s:%s (%s) failed to index: %s", d.site, d.page, pkg, uri, err)
+							continue
+						}
+					}
 				}
 
 				d.parsed = pageIndex
@@ -305,7 +348,7 @@ func init() {
 	go func() {
 		for {
 			generate()
-			time.Sleep(1 * time.Hour)
+			time.Sleep(RefreshDocEvery)
 		}
 	}()
 }
