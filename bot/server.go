@@ -116,7 +116,7 @@ func (s *Server) manage() {
 		fmt.Fprintf(s.conn, "PASS %s\n", s.pass)
 	}
 	fmt.Fprintf(s.conn, "NICK %s\nUSER %s . . :%s\n",
-		s.id.Nick, s.id.User, "github.com/kylelemons/blightbot " + VERSION)
+		s.id.Nick, s.id.User, "github.com/kylelemons/blightbot "+VERSION)
 	for {
 		select {
 		case inc, ok := <-s.inc:
