@@ -238,6 +238,12 @@ func godoc(src *commander.Source, resp *commander.Response, cmd string, args []s
 
 	search := strings.Join(args[start:], " ")
 
+	if search == "" {
+		resp.Private()
+		resp.Printf("What do you want to search for?")
+		return
+	}
+
 	if index == nil {
 		resp.Private()
 		resp.Printf("The index isn't ready yet.")
