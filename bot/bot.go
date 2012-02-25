@@ -40,8 +40,8 @@ func New(nick, user string) *Bot {
 	return &Bot{
 		LogLevel:  10,
 		id:        &Identity{Nick: nick, User: user},
-		ping:      30 * time.Second,
-		timeout:   1 * time.Second,
+		ping:      60 * time.Second,
+		timeout:   10 * time.Second,
 		callbacks: map[string][]Handler{},
 	}
 }

@@ -43,7 +43,7 @@ func (b *Bot) newServer(name, pass string, rwc io.ReadWriteCloser) {
 		id:       b.id,
 		name:     name,
 		pass:     pass,
-		pong:     make(chan bool),
+		pong:     make(chan bool, 1),
 		conn:     rwc,
 		inc:      make(chan *Message, 32),
 		channels: map[string]*Channel{},
@@ -169,7 +169,12 @@ func (s *Server) manage() {
 			case CMD_PING:
 				s.WriteMessage(NewMessage("", "PONG", inc.Args...))
 			case CMD_PONG:
-				s.pong <- true
+				select {
+				case s.pong <- true:
+				default:
+					log.Printf("Warning: could not send PONG notification")
+				}
+
 			case CMD_PRIVMSG:
 				if len(inc.Args) < 2 {
 					break
