@@ -2,10 +2,12 @@ package gonuts
 
 import (
 	"exp/html"
+	"fmt"
 	"log"
-	"path"
 	"net/http"
 	"net/url"
+	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -34,12 +36,12 @@ type Index struct {
 }
 
 type PageIndex struct {
-	SectionURLs map[string]string
+	SectionURLs map[string][]string
 }
 
 func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 	if p.SectionURLs == nil {
-		p.SectionURLs = make(map[string]string, 100)
+		p.SectionURLs = make(map[string][]string, 100)
 	}
 
 	var text func(*html.Node) string
@@ -74,12 +76,7 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 				}
 				sectionname = strings.TrimSpace(sectionname)
 				sectionname = strings.Title(sectionname)
-				//log.Printf("[GoDoc] %s: found section %q (at %s)", &uri, sectionname, &sectionurl)
-				if _, exists := p.SectionURLs[sectionname]; !exists {
-					p.SectionURLs[sectionname] = sectionurl.String()
-				} else {
-					//log.Printf("[GoDoc] %s: cowardly refusing to overwrite %q (was %s)", &uri, sectionname, old)
-				}
+				p.SectionURLs[sectionname] = append(p.SectionURLs[sectionname], sectionurl.String())
 				return
 			} else if n.Data == "a" {
 				pkgpath := ""
@@ -116,8 +113,8 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 				}
 				pkgurl := uri
 				pkgurl.Path = path.Join(pkgurl.Path, pkgpath)
-				//log.Printf("[GoDoc] %s: found pkg %q (at %s)", &uri, pkgname, &pkgurl)
-				p.SectionURLs[pkgpath] = pkgurl.String()
+
+				p.SectionURLs[pkgpath] = append(p.SectionURLs[pkgpath], pkgurl.String())
 				return
 			}
 		}
@@ -143,7 +140,6 @@ func generate() {
 	for site, host := range DocSites {
 		index.Pages[site] = map[string]*PageIndex{}
 		for page, path := range DocPages {
-			log.Printf("GEN %s %s", site, page)
 			d := data{
 				site: site,
 				page: page,
@@ -180,13 +176,14 @@ func generate() {
 					uris := make([]string, 0, len(pageIndex.SectionURLs))
 					pkgs := make([]string, 0, len(pageIndex.SectionURLs))
 
-					for pkg, uri := range pageIndex.SectionURLs {
-						if !strings.Contains(uri, "/pkg/") {
-							continue
+					for pkg := range pageIndex.SectionURLs {
+						for _, uri := range pageIndex.SectionURLs[pkg] {
+							if !strings.Contains(uri, "/pkg/") {
+								continue
+							}
+							uris = append(uris, uri)
+							pkgs = append(pkgs, pkg)
 						}
-						log.Printf("[GoDoc] Perusing package %q at %q", pkg, uri)
-						uris = append(uris, uri)
-						pkgs = append(pkgs, pkg)
 					}
 
 					for i, uri := range uris {
@@ -294,9 +291,11 @@ func godoc(src *commander.Source, resp *commander.Response, cmd string, args []s
 		return
 	}
 
-	resp.Public()
 	prefix := ""
-	found := 0
+
+	exact := make([]string, 0, MaxPublicResults)
+	found := make([]string, 0, MaxPublicResults)
+
 	for _, site := range sites {
 		if len(sites) > 1 {
 			prefix = site + ": "
@@ -307,30 +306,54 @@ func godoc(src *commander.Source, resp *commander.Response, cmd string, args []s
 				search = strings.Title(search)
 			}
 			pageIndex := index.Pages[site][page]
-			if url, ok := pageIndex.SectionURLs[search]; ok {
-				found++
-				resp.Printf("%s%s: %s - %s", prefix, page, search, url)
+			if urls, ok := pageIndex.SectionURLs[search]; ok {
+				for _, url := range urls {
+					exact = append(exact, fmt.Sprintf("%s%s: %s - %s", prefix, page, search, url))
+				}
+			}
+			if len(exact) > 0 {
 				continue
 			}
-			for section, url := range pageIndex.SectionURLs {
+			for section, urls := range pageIndex.SectionURLs {
 				if strings.Contains(section, search) {
-					found++
-					if found > MaxPublicResults {
-						resp.Private()
-						resp.Printf("Too many results to display them all.")
-						return
+					for _, url := range urls {
+						found = append(found, fmt.Sprintf("%s%s: %s - %s", prefix, page, section, url))
 					}
-					resp.Printf("%s%s: %s - %s", prefix, page, section, url)
 				}
 			}
 		}
 	}
-	if found == 0 {
+	switch {
+	case len(exact) > 0:
+		resp.Public()
+		for _, e := range exact {
+			resp.Printf(e)
+		}
+	case len(found) > MaxPublicResults:
+		resp.Private()
+		resp.Printf("Found %d results; only showing %d", len(found), MaxPublicResults)
+		sort.Sort(DashSorter(found))
+		found = found[:MaxPublicResults]
+		fallthrough
+	case len(found) > 0:
+		resp.Public()
+		for _, f := range found {
+			resp.Printf(f)
+		}
+	default:
 		resp.Private()
 		resp.Printf("Nothing found for %q in %v x %v", search, sites, pages)
 	}
 
 }
+
+type DashSorter []string
+
+func (ds DashSorter) Len() int { return len(ds) }
+func (ds DashSorter) Less(i, j int) bool {
+	return strings.IndexRune(ds[i], '-') < strings.IndexRune(ds[j], '-')
+}
+func (ds DashSorter) Swap(i, j int) { ds[i], ds[j] = ds[j], ds[i] }
 
 var Pkg = commander.Cmd("pkg", godoc).Help(`Retrieve the URLs for go packages
 Usage: PKG [--release] [--weekly] [--tip] <pkgname>`)
@@ -348,7 +371,6 @@ Usage: DOC [--release] [--weekly] [--tip] <search terms>`)
 func init() {
 	go func() {
 		for {
-			log.Printf("CALL")
 			generate()
 			time.Sleep(RefreshDocEvery)
 		}
