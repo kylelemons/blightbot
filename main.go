@@ -43,6 +43,7 @@ var modlists = map[string][]*commander.Command{
 		gonuts.Go1,
 		gonuts.Pkg,
 		gonuts.Spec,
+		gonuts.TPDoc,
 	},
 	"acro": {
 		acro.Acro,
