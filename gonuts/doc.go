@@ -111,7 +111,7 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 					return
 				}
 				// Package names are either the same as or the last entry of the path
-				if pkgname != pkgpath && !strings.HasSuffix("pkg/"+pkgname, pkgpath) {
+				if pkgname != pkgpath && !strings.HasSuffix(pkgpath, "/"+pkgname) {
 					return
 				}
 				pkgurl := uri
@@ -143,6 +143,7 @@ func generate() {
 	for site, host := range DocSites {
 		index.Pages[site] = map[string]*PageIndex{}
 		for page, path := range DocPages {
+			log.Printf("GEN %s %s", site, page)
 			d := data{
 				site: site,
 				page: page,
@@ -180,7 +181,7 @@ func generate() {
 					pkgs := make([]string, 0, len(pageIndex.SectionURLs))
 
 					for pkg, uri := range pageIndex.SectionURLs {
-						if !strings.HasSuffix(uri, "/pkg/"+pkg) {
+						if !strings.Contains(uri, "/pkg/") {
 							continue
 						}
 						log.Printf("[GoDoc] Perusing package %q at %q", pkg, uri)
@@ -347,6 +348,7 @@ Usage: DOC [--release] [--weekly] [--tip] <search terms>`)
 func init() {
 	go func() {
 		for {
+			log.Printf("CALL")
 			generate()
 			time.Sleep(RefreshDocEvery)
 		}

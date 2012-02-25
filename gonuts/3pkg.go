@@ -4,7 +4,6 @@ import (
 	"path"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/kylelemons/blightbot/commander"
 )
@@ -60,12 +59,3 @@ Usage: 3PKG <pkgname>
 
 Thanks to Gary Burd for his awesome gopkgdoc site!
 http://gopkgdoc.appspot.com/`)
-
-func init() {
-	go func() {
-		for {
-			generate()
-			time.Sleep(1 * time.Hour)
-		}
-	}()
-}
