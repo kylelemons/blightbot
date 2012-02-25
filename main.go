@@ -59,7 +59,7 @@ func modlist() string {
 
 func OnConnect(event string, serv *bot.Server, msg *bot.Message) {
 	if *nsid != "" {
-		serv.WriteMessage(bot.NewMessage("", bot.CMD_PRIVMSG, "NickServ", "IDENTIFY " + *nsid))
+		serv.WriteMessage(bot.NewMessage("", bot.CMD_PRIVMSG, "NickServ", "IDENTIFY "+*nsid))
 		time.Sleep(3)
 	}
 	serv.WriteMessage(bot.NewMessage("", "JOIN", *channel))
@@ -118,5 +118,5 @@ func main() {
 	}
 
 	log.Printf("Bot is running...")
-	select{}
+	select {}
 }
