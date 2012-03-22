@@ -1,7 +1,6 @@
 package gonuts
 
 import (
-	"path"
 	"net/http"
 	"net/url"
 
@@ -9,8 +8,7 @@ import (
 )
 
 var ThirdPartyHost = "gopkgdoc.appspot.com"
-var ThirdPartyPath = "/pkg/"
-var ThirdPartyPackages = "http://gopkgdoc.appspot.com/packages"
+var ThirdPartyIndex = "http://gopkgdoc.appspot.com/index"
 
 /* TODO cache?
 var tpCacheLock sync.Mutex
@@ -39,19 +37,22 @@ func tpdoc(src *commander.Source, resp *commander.Response, cmd string, args []s
 	}
 
 	uri := url.URL{
-		Scheme: "http",
-		Host:   ThirdPartyHost,
-		Path:   path.Join(ThirdPartyPath, pkg),
+		Scheme:   "http",
+		Host:     ThirdPartyHost,
+		Path:     "/",
+		RawQuery: url.Values{"q": {pkg}}.Encode(),
 	}
 
 	r, err := http.Head(uri.String())
-	if err != nil || r.StatusCode != http.StatusOK {
+
+	// If the query did not redirect, then GoPkgDoc could not find the package.
+	if err != nil || r.StatusCode != http.StatusOK || r.Request.URL.Path == "/" {
 		resp.Public()
-		resp.Printf("Hmm, I can't find %q.  You can look for it on %s .", pkg, ThirdPartyPackages)
+		resp.Printf("Hmm, I can't find %q.  You can look for it on %s .", pkg, ThirdPartyIndex)
 		return
 	}
 	resp.Public()
-	resp.Printf("3pkg: %s", uri.String())
+	resp.Printf("3pkg: %s", r.Request.URL.String())
 }
 
 var TPDoc = commander.Cmd("3pkg", tpdoc).Help(`Retrieve the URL for a third-party package
