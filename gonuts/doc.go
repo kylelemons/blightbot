@@ -79,7 +79,6 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 				sectionname = strings.TrimSpace(sectionname)
 				sectionname = strings.Title(sectionname)
 
-				log.Printf("Found %q %q", sectionname, sectionurl)
 				p.SectionURLs[sectionname] = append(p.SectionURLs[sectionname], sectionurl.String())
 				return
 			} else if n.Data == "a" {
