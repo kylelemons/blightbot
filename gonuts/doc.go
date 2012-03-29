@@ -20,15 +20,17 @@ const RefreshDocEvery = 6 * time.Hour
 var DocSites = map[string]string{
 	"release": "golang.org",
 	"weekly":  "weekly.golang.org",
-	"tip":     "tip.golang.org",
+	//"tip":     "tip.golang.org",
 }
 
 var DocPages = map[string]string{
-	"pkg":  "/pkg",
-	"ego":  "/doc/effective_go.html",
-	"faq":  "/doc/go_faq.html",
-	"spec": "/doc/go_spec.html",
-	"go1":  "/doc/go1.html",
+	"pkg":    "/pkg",
+	"cmd":    "/cmd",
+	"ego":    "/doc/effective_go.html",
+	"faq":    "/doc/go_faq.html",
+	"spec":   "/ref/spec",
+	"go1":    "/doc/go1.html",
+	"compat": "/doc/go1compat.html",
 }
 
 type Index struct {
@@ -76,6 +78,8 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 				}
 				sectionname = strings.TrimSpace(sectionname)
 				sectionname = strings.Title(sectionname)
+
+				log.Printf("Found %q %q", sectionname, sectionurl)
 				p.SectionURLs[sectionname] = append(p.SectionURLs[sectionname], sectionurl.String())
 				return
 			} else if n.Data == "a" {
@@ -91,6 +95,7 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 						pkgname = child.Data
 					}
 				}
+	
 				// All packages have a name and a href
 				if pkgname == "" || pkgpath == "" {
 					return
@@ -111,6 +116,7 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 				if pkgname != pkgpath && !strings.HasSuffix(pkgpath, "/"+pkgname) {
 					return
 				}
+
 				pkgurl := uri
 				pkgurl.Path = path.Join(pkgurl.Path, pkgpath)
 
@@ -172,13 +178,14 @@ func generate() {
 					return
 				}
 
-				if d.page == "pkg" {
+				if d.page == "pkg" || d.page == "cmd" {
 					uris := make([]string, 0, len(pageIndex.SectionURLs))
 					pkgs := make([]string, 0, len(pageIndex.SectionURLs))
+					need := "/" + d.page + "/"
 
 					for pkg := range pageIndex.SectionURLs {
 						for _, uri := range pageIndex.SectionURLs[pkg] {
-							if !strings.Contains(uri, "/pkg/") {
+							if !strings.Contains(uri, need) {
 								continue
 							}
 							uris = append(uris, uri)
@@ -235,23 +242,20 @@ func godoc(src *commander.Source, resp *commander.Response, cmd string, args []s
 	// The index is copy-on-write
 	index := godocIndex
 
-	sites, pages := []string{"weekly"}, []string{cmd}
+	sites, pages := []string{"release"}, []string{cmd}
 
 	switch cmd {
-	case "pkg":
-	case "faq":
-	case "go1":
-	case "spec":
-	case "ego":
 	case "doc":
 		pages = make([]string, 0, len(DocPages))
 		for page := range DocPages {
 			pages = append(pages, page)
 		}
 	default:
-		resp.Private()
-		resp.Printf("Unrecognized godoc subcommand %q", cmd)
-		return
+		if _, ok := DocPages[cmd]; !ok {
+			resp.Private()
+			resp.Printf("Unrecognized godoc subcommand %q", cmd)
+			return
+		}
 	}
 
 	var start int
@@ -302,7 +306,9 @@ func godoc(src *commander.Source, resp *commander.Response, cmd string, args []s
 		}
 		for _, page := range pages {
 			search := search
-			if page != "pkg" {
+			switch page {
+			case "pkg", "cmd": // leave the case alone
+			default:
 				search = strings.Title(search)
 			}
 			pageIndex := index.Pages[site][page]
@@ -355,20 +361,26 @@ func (ds DashSorter) Less(i, j int) bool {
 }
 func (ds DashSorter) Swap(i, j int) { ds[i], ds[j] = ds[j], ds[i] }
 
-var Pkg = commander.Cmd("pkg", godoc).Help(`Retrieve the URLs for go packages
-Usage: PKG [--release] [--weekly] [--tip] <pkgname>`)
-var FAQ = commander.Cmd("faq", godoc).Help(`Retrieve the URLs for FAQ sections
-Usage: FAQ [--release] [--weekly] [--tip] <search terms>`)
-var Go1 = commander.Cmd("go1", godoc).Help(`Retrieve the URLs for Go1 sections
-Usage: GO1 [--release] [--weekly] [--tip] <search terms>`)
-var Spec = commander.Cmd("spec", godoc).Help(`Retrieve the URLs for Specification sections
-Usage: SPEC [--release] [--weekly] [--tip] <search terms>`)
-var EGo = commander.Cmd("ego", godoc).Help(`Retrieve the URLs for Effective Go sections
-Usage: EGO [--release] [--weekly] [--tip] <search terms>`)
-var Doc = commander.Cmd("doc", godoc).Help(`Search the (cached) online documents
-Usage: DOC [--release] [--weekly] [--tip] <search terms>`)
+func dochelp(cmd, text, searchFor string) string {
+	opts := ""
+	for site := range DocSites {
+		opts += "[--" + site + "] "
+	}
+	return fmt.Sprintf("%s\nUsage: %s %s<%s>", text, strings.ToUpper(cmd), opts, searchFor)
+}
 
-func init() {
+var (
+	Pkg    = commander.Cmd("pkg", godoc).Help(dochelp("pkg", "Retrieve the URLs for go packages", "package"))
+	Cmd    = commander.Cmd("cmd", godoc).Help(dochelp("cmd", "Retrieve the URLs for go commands", "command"))
+	FAQ    = commander.Cmd("faq", godoc).Help(dochelp("faq", "Retrieve the URLs for FAQ sections", "search terms"))
+	Go1    = commander.Cmd("go1", godoc).Help(dochelp("go1", "Retrieve the URLs for Go1 Release Notes sections", "search terms"))
+	EGo    = commander.Cmd("ego", godoc).Help(dochelp("ego", "Retrieve the URLs for Effective Go sections", "search terms"))
+	Doc    = commander.Cmd("doc", godoc).Help(dochelp("doc", "Search the (cached) online documents", "search terms"))
+	Spec   = commander.Cmd("spec", godoc).Help(dochelp("spec", "Retrieve the URLs for Specification sections", "search terms"))
+	Compat = commander.Cmd("compat", godoc).Help(dochelp("compat", "Retrieve the URLs for Go1 Compatibility Notes sections", "search terms"))
+)
+
+func StartPolling() {
 	go func() {
 		for {
 			generate()

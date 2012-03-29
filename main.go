@@ -12,6 +12,7 @@ import (
 	"github.com/kylelemons/blightbot/commander"
 	"github.com/kylelemons/blightbot/gonuts"
 	"github.com/kylelemons/blightbot/acro"
+	"github.com/kylelemons/blightbot/paste"
 )
 
 func randname() string {
@@ -41,12 +42,17 @@ var modlists = map[string][]*commander.Command{
 		gonuts.EGo,
 		gonuts.FAQ,
 		gonuts.Go1,
+		gonuts.Compat,
 		gonuts.Pkg,
+		gonuts.Cmd,
 		gonuts.Spec,
 		gonuts.TPDoc,
 	},
 	"acro": {
 		acro.Acro,
+	},
+	"paste": {
+		paste.NoPaste,
 	},
 }
 
@@ -108,6 +114,15 @@ func main() {
 		}
 		log.Printf("Loading commands from %q", mod)
 		cmds = append(cmds, list...)
+
+		switch mod {
+		case "gonuts":
+			log.Printf("Starting godoc polling")
+			gonuts.StartPolling()
+		case "paste":
+			log.Printf("Initializing paste module")
+			paste.Register(b)
+		}
 	}
 	go commander.Run(b, '!', cmds)
 
