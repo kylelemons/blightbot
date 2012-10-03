@@ -19,8 +19,8 @@ const RefreshDocEvery = 6 * time.Hour
 
 var DocSites = map[string]string{
 	"release": "golang.org",
-	"weekly":  "weekly.golang.org",
-	//"tip":     "tip.golang.org",
+	"tip":     "tip.golang.org",
+	//"weekly":  "weekly.golang.org", // As of Go1, there really aren't weeklies anymore
 }
 
 var DocPages = map[string]string{
@@ -41,6 +41,17 @@ type PageIndex struct {
 	SectionURLs map[string][]string
 }
 
+// This part of the API is still in flux, so I'm writing a helper.
+func children(node *html.Node) (children []*html.Node) {
+	if node.FirstChild == nil {
+		return nil
+	}
+	for child := node.FirstChild; child != nil; child = child.NextSibling {
+		children = append(children, child)
+	}
+	return children
+}
+
 func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 	if p.SectionURLs == nil {
 		p.SectionURLs = make(map[string][]string, 100)
@@ -52,7 +63,7 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 		if n.Type == html.TextNode {
 			pieces = append(pieces, n.Data)
 		}
-		for _, child := range n.Child {
+		for _, child := range children(n) {
 			t := strings.TrimSpace(text(child))
 			if t != "" {
 				pieces = append(pieces, t)
@@ -89,7 +100,7 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 						pkgpath = attr.Val
 					}
 				}
-				for _, child := range n.Child {
+				for _, child := range children(n) {
 					if child.Type == html.TextNode {
 						pkgname = child.Data
 					}
@@ -111,8 +122,13 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 				if strings.ToLower(pkgname) != pkgname {
 					return
 				}
+				// Strip out trailing slashes (all packages have them nowadays)
+				if last := len(pkgpath)-1; pkgpath[last] == '/' {
+					pkgpath = pkgpath[:last]
+				}
 				// Package names are either the same as or the last entry of the path
 				if pkgname != pkgpath && !strings.HasSuffix(pkgpath, "/"+pkgname) {
+					log.Printf("Doesn't look like a package: path=%q package=%q", pkgpath, pkgname)
 					return
 				}
 
@@ -123,7 +139,7 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 				return
 			}
 		}
-		for _, c := range n.Child {
+		for _, c := range children(n) {
 			index(c)
 		}
 	}
@@ -158,6 +174,7 @@ func generate() {
 				defer func() {
 					done <- d
 				}()
+				log.Printf("[GoDoc] %s:%s (%s) fetching...", d.site, d.page, uri)
 				resp, err := http.Get(uri.String())
 				if err != nil {
 					log.Printf("[GoDoc] %s:%s (%s) failed: %s", d.site, d.page, uri, err)
