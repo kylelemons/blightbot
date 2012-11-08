@@ -52,12 +52,17 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 		if n.Type == html.TextNode {
 			pieces = append(pieces, n.Data)
 		}
-		for _, child := range n.Child {
+		
+		for child := n.FirstChild ; ; child = child.NextSibling {
 			t := strings.TrimSpace(text(child))
 			if t != "" {
 				pieces = append(pieces, t)
 			}
+			if child == n.LastChild {
+				break
+			}
 		}
+		
 		return strings.Join(pieces, " ")
 	}
 
@@ -89,12 +94,16 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 						pkgpath = attr.Val
 					}
 				}
-				for _, child := range n.Child {
+
+				for child := n.FirstChild ; ; child = child.NextSibling {
 					if child.Type == html.TextNode {
 						pkgname = child.Data
 					}
+					if child == n.LastChild {
+						break
+					}
 				}
-	
+
 				// All packages have a name and a href
 				if pkgname == "" || pkgpath == "" {
 					return
@@ -123,8 +132,11 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 				return
 			}
 		}
-		for _, c := range n.Child {
+		for c := n.FirstChild ; ; c = c.NextSibling {
 			index(c)
+			if c == n.LastChild {
+				break
+			}
 		}
 	}
 	index(root)
