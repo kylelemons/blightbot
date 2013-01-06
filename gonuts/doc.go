@@ -128,7 +128,6 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 				}
 				// Package names are either the same as or the last entry of the path
 				if pkgname != pkgpath && !strings.HasSuffix(pkgpath, "/"+pkgname) {
-					log.Printf("Doesn't look like a package: path=%q package=%q", pkgpath, pkgname)
 					return
 				}
 
