@@ -2,9 +2,10 @@ package commander
 
 import (
 	"log"
-	"github.com/kylelemons/blightbot/bot"
 	"sort"
 	"strings"
+
+	"github.com/kylelemons/blightbot/bot"
 )
 
 type Hook func(s *Source, r *Response, cmd string, args []string)
@@ -115,6 +116,21 @@ func Run(b *bot.Bot, startchar byte, cmds []*Command) {
 			},
 		}
 		cmdmap["PING"] = append(cmdmap["PING"], c)
+		cmds = append(cmds, c)
+	}
+
+	// Add version
+	if _, ok := cmdmap["VERSION"]; !ok {
+		c := &Command{
+			name: "VERSION",
+			help: "Built-in CTCP VERSION handler",
+			priv: true,
+			hook: func(s *Source, r *Response, cmd string, args []string) {
+				r.Private()
+				r.Printf("VERSION github.com/kylelemons/blightbot %s", bot.VERSION)
+			},
+		}
+		cmdmap["VERSION"] = append(cmdmap["VERSION"], c)
 		cmds = append(cmds, c)
 	}
 
