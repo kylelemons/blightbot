@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kylelemons/blightbot/acro"
 	"github.com/kylelemons/blightbot/bot"
 	"github.com/kylelemons/blightbot/commander"
 	"github.com/kylelemons/blightbot/gonuts"
-	"github.com/kylelemons/blightbot/acro"
 	"github.com/kylelemons/blightbot/paste"
 )
 
