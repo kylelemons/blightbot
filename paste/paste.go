@@ -60,7 +60,7 @@ func Register(b *bot.Bot) {
 func pasteloop() {
 	chans := strings.Split(*chans, ",")
 
-	random := make([]byte, 16)
+	random := make([]byte, 18)
 	if _, err := io.ReadFull(rand.Reader, random); err != nil {
 		panic("not enough entropy")
 	}
