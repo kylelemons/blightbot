@@ -17,8 +17,13 @@ var tpCache map[string]string
 
 func tpdoc(src *commander.Source, resp *commander.Response, cmd string, args []string) {
 	if len(args) == 0 {
-		resp.Private()
-		resp.Printf("What package do you want?")
+		resp.Public()
+		u := &url.URL{
+			Scheme: "http",
+			Host:   ThirdPartyHost,
+			Path:   "/",
+		}
+		resp.Printf("%s: %s", cmd, u)
 		return
 	}
 
