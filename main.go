@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 
@@ -21,6 +23,8 @@ func randname() string {
 }
 
 var (
+	logFile = flag.String("log", "blightbot.log", "Logfile")
+
 	nick    = flag.String("nick", randname(), "Nick to use when connecting")
 	user    = flag.String("user", "blight", "Username to use when connecting")
 	pass    = flag.String("pass", "", "Server password to use")
@@ -89,6 +93,12 @@ func OnDisconnect(event string, serv *bot.Server, msg *bot.Message) {
 
 func main() {
 	flag.Parse()
+
+	lf, err := os.Create(*logFile)
+	if err != nil {
+		log.Fatalf("create(%q): %s", *logFile, err)
+	}
+	log.SetOutput(io.MultiWriter(os.Stderr, lf))
 
 	// Parse servers
 	s, p := strings.Split(*server, ","), strings.Split(*pass, ",")
