@@ -3,10 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
-	"os"
 	"strings"
 	"time"
 
@@ -15,6 +13,7 @@ import (
 	"github.com/kylelemons/blightbot/commander"
 	"github.com/kylelemons/blightbot/gonuts"
 	"github.com/kylelemons/blightbot/paste"
+	"kylelemons.net/go/daemon"
 )
 
 func randname() string {
@@ -23,7 +22,7 @@ func randname() string {
 }
 
 var (
-	logFile = flag.String("log", "blightbot.log", "Logfile")
+	logFile = daemon.LogFileFlag("log", 0644)
 
 	nick    = flag.String("nick", randname(), "Nick to use when connecting")
 	user    = flag.String("user", "blight", "Username to use when connecting")
@@ -93,12 +92,6 @@ func OnDisconnect(event string, serv *bot.Server, msg *bot.Message) {
 
 func main() {
 	flag.Parse()
-
-	lf, err := os.Create(*logFile)
-	if err != nil {
-		log.Fatalf("create(%q): %s", *logFile, err)
-	}
-	log.SetOutput(io.MultiWriter(os.Stderr, lf))
 
 	// Parse servers
 	s, p := strings.Split(*server, ","), strings.Split(*pass, ",")

@@ -1,7 +1,6 @@
 package gonuts
 
 import (
-	"exp/html"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"code.google.com/p/go.net/html"
 	"github.com/kylelemons/blightbot/commander"
 )
 
