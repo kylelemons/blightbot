@@ -8,11 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kylelemons/blightbot/acro"
 	"github.com/kylelemons/blightbot/bot"
 	"github.com/kylelemons/blightbot/commander"
 	"github.com/kylelemons/blightbot/gonuts"
-	"github.com/kylelemons/blightbot/acro"
 	"github.com/kylelemons/blightbot/paste"
+	"kylelemons.net/go/daemon"
 )
 
 func randname() string {
@@ -21,6 +22,8 @@ func randname() string {
 }
 
 var (
+	logFile = daemon.LogFileFlag("log", 0644)
+
 	nick    = flag.String("nick", randname(), "Nick to use when connecting")
 	user    = flag.String("user", "blight", "Username to use when connecting")
 	pass    = flag.String("pass", "", "Server password to use")

@@ -1,7 +1,6 @@
 package gonuts
 
 import (
-	"exp/html"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"code.google.com/p/go.net/html"
 	"github.com/kylelemons/blightbot/commander"
 )
 
@@ -105,7 +105,7 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 						pkgname = child.Data
 					}
 				}
-	
+
 				// All packages have a name and a href
 				if pkgname == "" || pkgpath == "" {
 					return
@@ -123,7 +123,7 @@ func (p *PageIndex) ParseFrom(uri url.URL, root *html.Node) error {
 					return
 				}
 				// Strip out trailing slashes (all packages have them nowadays)
-				if last := len(pkgpath)-1; pkgpath[last] == '/' {
+				if last := len(pkgpath) - 1; pkgpath[last] == '/' {
 					pkgpath = pkgpath[:last]
 				}
 				// Package names are either the same as or the last entry of the path
@@ -299,8 +299,22 @@ func godoc(src *commander.Source, resp *commander.Response, cmd string, args []s
 	search := strings.Join(args[start:], " ")
 
 	if search == "" {
-		resp.Private()
-		resp.Printf("What do you want to search for?")
+		resp.Public()
+		path, ok := DocPages[cmd]
+		if !ok {
+			return
+		}
+		for _, site := range sites {
+			host, ok := DocSites[site]
+			if ok {
+				u := &url.URL{
+					Scheme: "http",
+					Host:   host,
+					Path:   path,
+				}
+				resp.Printf("%s: %s", cmd, u)
+			}
+		}
 		return
 	}
 

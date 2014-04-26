@@ -7,8 +7,8 @@ import (
 	"github.com/kylelemons/blightbot/commander"
 )
 
-var ThirdPartyHost = "gopkgdoc.appspot.com"
-var ThirdPartyIndex = "http://gopkgdoc.appspot.com/index"
+var ThirdPartyHost = "godoc.org"
+var ThirdPartyIndex = "http://godoc.org/-/index"
 
 /* TODO cache?
 var tpCacheLock sync.Mutex
@@ -17,8 +17,13 @@ var tpCache map[string]string
 
 func tpdoc(src *commander.Source, resp *commander.Response, cmd string, args []string) {
 	if len(args) == 0 {
-		resp.Private()
-		resp.Printf("What package do you want?")
+		resp.Public()
+		u := &url.URL{
+			Scheme: "http",
+			Host:   ThirdPartyHost,
+			Path:   "/",
+		}
+		resp.Printf("%s: %s", cmd, u)
 		return
 	}
 
@@ -48,7 +53,7 @@ func tpdoc(src *commander.Source, resp *commander.Response, cmd string, args []s
 	// If the query did not redirect, then GoPkgDoc could not find the package.
 	if err != nil || r.StatusCode != http.StatusOK || r.Request.URL.Path == "/" {
 		resp.Public()
-		resp.Printf("Hmm, I can't find %q.  You can look for it on %s .", pkg, ThirdPartyIndex)
+		resp.Printf("Hmm, I can't find %q.  You can look for it on %s", pkg, ThirdPartyIndex)
 		return
 	}
 	resp.Public()
